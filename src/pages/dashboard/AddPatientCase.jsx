@@ -308,14 +308,14 @@ export function AddPatientCase() {
                   />
                   <div className="mt-2">
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 overflow-hidden">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full h-full">
                           {exam.imageKey && exam.imageUrl ? (
-                            <div className="relative w-full h-full">
+                            <div className="relative w-full h-full flex items-center justify-center">
                               <img
                                 src={exam.imageUrl}
                                 alt="Uploaded"
-                                className="w-full h-full object-contain"
+                                className="max-w-full max-h-full object-contain"
                                 onError={(e) => {
                                   e.target.onerror = null;
                                   e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
@@ -406,14 +406,14 @@ export function AddPatientCase() {
                   />
                   <div className="mt-2">
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 overflow-hidden">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full h-full">
                           {test.imageKey && test.imageUrl ? (
-                            <div className="relative w-full h-full">
+                            <div className="relative w-full h-full flex items-center justify-center">
                               <img
                                 src={test.imageUrl}
                                 alt="Uploaded"
-                                className="w-full h-full object-contain"
+                                className="max-w-full max-h-full object-contain"
                                 onError={(e) => {
                                   e.target.onerror = null;
                                   e.target.src = 'https://via.placeholder.com/150?text=Image+Error';

@@ -8,62 +8,118 @@ import {
 } from "@material-tailwind/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useState } from "react";
+import axiosInstance from "@/config/axios";
 
 export function SignUp() {
   const navigate = useNavigate();
-  const { login, error } = useGoogleAuth();
+  const { login, error: googleError } = useGoogleAuth();
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const response = await axiosInstance.post("/api/v1/auth/register", formData);
+      setSuccess("Đăng ký thành công! Vui lòng đăng nhập.");
+      setTimeout(() => {
+        navigate("/auth/sign-in");
+      }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Có lỗi xảy ra khi đăng ký");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <section className="m-8 flex">
-            <div className="w-2/5 h-full hidden lg:block">
-        <img
-          src="/img/vertical-bg.png"
-          className="h-full w-full object-cover rounded-3xl"
-        />
-      </div>
-      <div className="w-full lg:w-3/5 flex flex-col items-center justify-center">
+    <section className="m-8 flex gap-4">
+      <div className="w-full lg:w-3/5 mt-24">
         <div className="text-center">
           <Typography variant="h2" className="font-bold mb-4">Đăng ký tài khoản</Typography>
           <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Nhập thông tin của bạn để đăng ký tài khoản.</Typography>
         </div>
-        <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
+        <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
+          {error && (
+            <Alert color="red" className="mb-4">
+              {error}
+            </Alert>
+          )}
+          {googleError && (
+            <Alert color="red" className="mb-4">
+              {googleError}
+            </Alert>
+          )}
+          {success && (
+            <Alert color="green" className="mb-4">
+              {success}
+            </Alert>
+          )}
           <div className="mb-1 flex flex-col gap-6">
-          <div className="mt-5 flex flex-col gap-6">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-             Họ và tên
+              Họ và tên <span className="text-red-500">*</span>
             </Typography>
             <Input
               size="lg"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
               placeholder="Nguyen Van A"
               className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              
             />
-          </div>
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Email
+              Email <span className="text-red-500">*</span>
             </Typography>
             <Input
               size="lg"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="name@mail.com"
               className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              
             />
-          </div>
-          <div className="flex flex-col gap-6 mt-5">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Mật khẩu
+              Mật khẩu <span className="text-red-500">*</span>
             </Typography>
             <Input
               size="lg"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="********"
               className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              
             />
           </div>
           <Checkbox
@@ -83,9 +139,16 @@ export function SignUp() {
               </Typography>
             }
             containerProps={{ className: "-ml-2.5" }}
+            required
           />
-          <Button className="mt-6" fullWidth color="light-green">
-            Đăng ký
+          <Button 
+            type="submit"
+            className="mt-6" 
+            fullWidth 
+            color="light-green"
+            disabled={loading}
+          >
+            {loading ? "Đang xử lý..." : "Đăng ký"}
           </Button>
 
           <div className="space-y-4 mt-8">
@@ -116,13 +179,13 @@ export function SignUp() {
             Đã có tài khoản
             <Link to="/auth/sign-in" className="text-gray-900 ml-1">Đăng nhập</Link>
           </Typography>
-          {error && (
-            <Alert color="red" className="mb-4">
-              {error}
-            </Alert>
-          )}
         </form>
-
+      </div>
+      <div className="w-2/5 h-full hidden lg:block">
+        <img
+          src="/img/vertical-bg.png"
+          className="h-full w-full object-cover rounded-3xl"
+        />
       </div>
     </section>
   );
