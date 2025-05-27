@@ -4,7 +4,7 @@ import {
   ClipboardDocumentIcon,
   BeakerIcon,
 } from "@heroicons/react/24/solid";
-import { PatientCase } from "@/pages/dashboard";
+import PatientCaseList from "@/pages/dashboard/PatientCaseList";
 import { SignIn, SignUp } from "@/pages/auth";
 import { ClinicalCategories } from "@/pages/dashboard/ClinicalCategories";
 import { AddPatientCase } from "@/pages/dashboard/AddPatientCase";
@@ -22,7 +22,7 @@ export const sidebarRoutes = [
         icon: <ClipboardDocumentIcon {...icon} />,
         name: "Danh sách bệnh nhân",
         path: "/patient-case",
-        element: <PatientCase />,
+        element: <PatientCaseList />,
       },
       {
         icon: <BeakerIcon {...icon} />,

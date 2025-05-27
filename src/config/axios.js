@@ -30,8 +30,10 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/sign-in';
+      localStorage.removeItem('accessToken');
+      window.location.href = '/auth/sign-in';
+    } else if (error.response?.status === 403) {
+      window.location.href = '/auth/error-403';
     }
     return Promise.reject(error);
   }

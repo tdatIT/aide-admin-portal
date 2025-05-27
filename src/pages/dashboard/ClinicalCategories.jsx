@@ -11,16 +11,22 @@ import {
   DialogFooter,
   Input,
   Textarea,
+  Tooltip,
 } from "@material-tailwind/react";
-import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import axiosInstance from "@/config/axios";
+import { toast } from "react-toastify";
 
 export function ClinicalCategories() {
   const [clinicalCategories, setClinicalCategories] = useState([]);
   const [paraclinicalCategories, setParaclinicalCategories] = useState([]);
   const [openClinicalDialog, setOpenClinicalDialog] = useState(false);
   const [openParaclinicalDialog, setOpenParaclinicalDialog] = useState(false);
+  const [openDeleteClinicalDialog, setOpenDeleteClinicalDialog] = useState(false);
+  const [openDeleteParaclinicalDialog, setOpenDeleteParaclinicalDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // Pagination states
   const [clinicalPagination, setClinicalPagination] = useState({
@@ -38,7 +44,7 @@ export function ClinicalCategories() {
 
   const fetchClinicalCategories = async () => {
     try {
-      const response = await axiosInstance.get("/api/v1/clinical-exam-categories", {
+      const response = await axiosInstance.get("/api/v1/admin/clinical-ex-cats", {
         params: {
           page: clinicalPagination.currentPage-1,
           size: clinicalPagination.pageSize,
@@ -58,7 +64,7 @@ export function ClinicalCategories() {
 
   const fetchParaclinicalCategories = async () => {
     try {
-      const response = await axiosInstance.get("/api/v1/paraclinical-test-categories", {
+      const response = await axiosInstance.get("/api/v1/admin/paraclinical-test-cats", {
         params: {
           page: paraclinicalPagination.currentPage-1,
           size: paraclinicalPagination.pageSize,
@@ -83,26 +89,105 @@ export function ClinicalCategories() {
     fetchParaclinicalCategories();
   }, [paraclinicalPagination.currentPage]);
 
+  const handleEditClinicalCategory = async () => {
+    try {
+      await axiosInstance.put(`/api/v1/admin/clinical-ex-cats/${selectedCategory.id}`, newCategory);
+      setOpenClinicalDialog(false);
+      setNewCategory({ name: "", description: "" });
+      setSelectedCategory(null);
+      setIsEditMode(false);
+      fetchClinicalCategories();
+      toast.success("Cập nhật danh mục thành công!");
+    } catch (error) {
+      console.error("Error updating clinical category:", error);
+      toast.error("Cập nhật danh mục thất bại!");
+    }
+  };
+
+  const handleEditParaclinicalCategory = async () => {
+    try {
+      await axiosInstance.put(`/api/v1/admin/paraclinical-test-cats/${selectedCategory.id}`, newCategory);
+      setOpenParaclinicalDialog(false);
+      setNewCategory({ name: "", description: "" });
+      setSelectedCategory(null);
+      setIsEditMode(false);
+      fetchParaclinicalCategories();
+      toast.success("Cập nhật danh mục thành công!");
+    } catch (error) {
+      console.error("Error updating paraclinical category:", error);
+      toast.error("Cập nhật danh mục thất bại!");
+    }
+  };
+
   const handleAddClinicalCategory = async () => {
     try {
-      await axiosInstance.post("/api/v1/clinical-exam-categories", newCategory);
+      await axiosInstance.post("/api/v1/admin/clinical-ex-cats", newCategory);
       setOpenClinicalDialog(false);
       setNewCategory({ name: "", description: "" });
       fetchClinicalCategories();
+      toast.success("Thêm danh mục thành công!");
     } catch (error) {
       console.error("Error adding clinical category:", error);
+      toast.error("Thêm danh mục thất bại!");
     }
   };
 
   const handleAddParaclinicalCategory = async () => {
     try {
-      await axiosInstance.post("/api/v1/paraclinical-test-categories", newCategory);
+      await axiosInstance.post("/api/v1/admin/paraclinical-test-cats", newCategory);
       setOpenParaclinicalDialog(false);
       setNewCategory({ name: "", description: "" });
       fetchParaclinicalCategories();
+      toast.success("Thêm danh mục thành công!");
     } catch (error) {
       console.error("Error adding paraclinical category:", error);
+      toast.error("Thêm danh mục thất bại!");
     }
+  };
+
+  const handleDeleteClinicalCategory = async () => {
+    try {
+      await axiosInstance.delete(`/api/v1/admin/clinical-ex-cats/${selectedCategory.id}`);
+      setOpenDeleteClinicalDialog(false);
+      setSelectedCategory(null);
+      fetchClinicalCategories();
+      toast.success("Xóa danh mục thành công!");
+    } catch (error) {
+      console.error("Error deleting clinical category:", error);
+      toast.error("Xóa danh mục thất bại!");
+    }
+  };
+
+  const handleDeleteParaclinicalCategory = async () => {
+    try {
+      await axiosInstance.delete(`/api/v1/admin/paraclinical-test-cats/${selectedCategory.id}`);
+      setOpenDeleteParaclinicalDialog(false);
+      setSelectedCategory(null);
+      fetchParaclinicalCategories();
+      toast.success("Xóa danh mục thành công!");
+    } catch (error) {
+      console.error("Error deleting paraclinical category:", error);
+      toast.error("Xóa danh mục thất bại!");
+    }
+  };
+
+  const handleEditClick = (category, type) => {
+    setSelectedCategory(category);
+    setNewCategory({ name: category.name, description: category.description });
+    setIsEditMode(true);
+    if (type === 'clinical') {
+      setOpenClinicalDialog(true);
+    } else {
+      setOpenParaclinicalDialog(true);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenClinicalDialog(false);
+    setOpenParaclinicalDialog(false);
+    setNewCategory({ name: "", description: "" });
+    setSelectedCategory(null);
+    setIsEditMode(false);
   };
 
   const renderPagination = (pagination, setPagination) => {
@@ -168,63 +253,55 @@ export function ClinicalCategories() {
               variant="gradient"
               color="white"
               size="sm"
-              onClick={() => setOpenClinicalDialog(true)}
+              onClick={() => {
+                setIsEditMode(false);
+                setOpenClinicalDialog(true);
+              }}
             >
               Thêm mới
             </Button>
           </div>
         </CardHeader>
-        <CardBody className="overflow-x-auto px-0 pt-0 pb-2">
-          <table className="w-full min-w-[640px] table-auto">
+        <CardBody className="overflow-x-auto p-4">
+          <table className="min-w-full text-left text-sm">
             <thead>
-              <tr>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    ID
-                  </Typography>
-                </th>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    Tên danh mục
-                  </Typography>
-                </th>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    Mô tả
-                  </Typography>
-                </th>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    Thao tác
-                  </Typography>
-                </th>
+              <tr className="text-sm">
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[10%]">ID</th>
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[30%]">Tên danh mục</th>
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[40%]">Mô tả</th>
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[20%]">Thao tác</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-sm">
               {clinicalCategories.map(({ id, name, description }) => (
-                <tr key={id}>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
-                      {id}
-                    </Typography>
-                  </td>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
-                      {name}
-                    </Typography>
-                  </td>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
-                      {description}
-                    </Typography>
-                  </td>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Button variant="text" size="sm" color="blue">
-                      Sửa
-                    </Button>
-                    <Button variant="text" size="sm" color="red">
-                      Xóa
-                    </Button>
+                <tr key={id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm">{id}</td>
+                  <td className="px-4 py-2 max-w-xs truncate text-sm" title={name}>{name}</td>
+                  <td className="px-4 py-2 max-w-xs truncate text-sm" title={description}>{description}</td>
+                  <td className="px-4 py-2 flex gap-2 items-center text-sm">
+                    <Tooltip content="Chỉnh sửa">
+                      <Button
+                        variant="text"
+                        color="blue-gray"
+                        size="sm"
+                        onClick={() => handleEditClick({ id, name, description }, 'clinical')}
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Xóa">
+                      <Button
+                        variant="text"
+                        color="red"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCategory({ id, name });
+                          setOpenDeleteClinicalDialog(true);
+                        }}
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </Button>
+                    </Tooltip>
                   </td>
                 </tr>
               ))}
@@ -250,63 +327,55 @@ export function ClinicalCategories() {
               variant="gradient"
               color="white"
               size="sm"
-              onClick={() => setOpenParaclinicalDialog(true)}
+              onClick={() => {
+                setIsEditMode(false);
+                setOpenParaclinicalDialog(true);
+              }}
             >
               Thêm mới
             </Button>
           </div>
         </CardHeader>
-        <CardBody className="overflow-x-auto px-0 pt-0 pb-2">
-          <table className="w-full min-w-[640px] table-auto">
+        <CardBody className="overflow-x-auto p-4">
+          <table className="min-w-full text-left text-sm">
             <thead>
-              <tr>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    ID
-                  </Typography>
-                </th>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    Tên danh mục
-                  </Typography>
-                </th>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    Mô tả
-                  </Typography>
-                </th>
-                <th className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                  <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                    Thao tác
-                  </Typography>
-                </th>
+              <tr className="text-sm">
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[10%]">ID</th>
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[30%]">Tên danh mục</th>
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[40%]">Mô tả</th>
+                <th className="px-4 py-2 font-bold text-gray-700 bg-gray-100 text-sm w-[20%]">Thao tác</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-sm">
               {paraclinicalCategories.map(({ id, name, description }) => (
-                <tr key={id}>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
-                      {id}
-                    </Typography>
-                  </td>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
-                      {name}
-                    </Typography>
-                  </td>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
-                      {description}
-                    </Typography>
-                  </td>
-                  <td className="py-3 px-6 border-b border-blue-gray-50">
-                    <Button variant="text" size="sm" color="blue">
-                      Sửa
-                    </Button>
-                    <Button variant="text" size="sm" color="red">
-                      Xóa
-                    </Button>
+                <tr key={id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm">{id}</td>
+                  <td className="px-4 py-2 max-w-xs truncate text-sm" title={name}>{name}</td>
+                  <td className="px-4 py-2 max-w-xs truncate text-sm" title={description}>{description}</td>
+                  <td className="px-4 py-2 flex gap-2 items-center text-sm">
+                    <Tooltip content="Chỉnh sửa">
+                      <Button
+                        variant="text"
+                        color="blue-gray"
+                        size="sm"
+                        onClick={() => handleEditClick({ id, name, description }, 'paraclinical')}
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Xóa">
+                      <Button
+                        variant="text"
+                        color="red"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCategory({ id, name });
+                          setOpenDeleteParaclinicalDialog(true);
+                        }}
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </Button>
+                    </Tooltip>
                   </td>
                 </tr>
               ))}
@@ -321,9 +390,11 @@ export function ClinicalCategories() {
         </CardBody>
       </Card>
 
-      {/* Add Clinical Category Dialog */}
-      <Dialog open={openClinicalDialog} handler={() => setOpenClinicalDialog(false)}>
-        <DialogHeader>Thêm danh mục khám lâm sàng mới</DialogHeader>
+      {/* Add/Edit Clinical Category Dialog */}
+      <Dialog open={openClinicalDialog} handler={handleCloseDialog}>
+        <DialogHeader>
+          {isEditMode ? "Chỉnh sửa danh mục khám lâm sàng" : "Thêm danh mục khám lâm sàng mới"}
+        </DialogHeader>
         <DialogBody>
           <div className="grid gap-6">
             <Input
@@ -339,18 +410,24 @@ export function ClinicalCategories() {
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="text" color="red" onClick={() => setOpenClinicalDialog(false)}>
+          <Button variant="text" color="red" onClick={handleCloseDialog}>
             Hủy
           </Button>
-          <Button variant="gradient" color="blue" onClick={handleAddClinicalCategory}>
-            Thêm mới
+          <Button
+            variant="gradient"
+            color="blue"
+            onClick={isEditMode ? handleEditClinicalCategory : handleAddClinicalCategory}
+          >
+            {isEditMode ? "Cập nhật" : "Thêm mới"}
           </Button>
         </DialogFooter>
       </Dialog>
 
-      {/* Add Paraclinical Category Dialog */}
-      <Dialog open={openParaclinicalDialog} handler={() => setOpenParaclinicalDialog(false)}>
-        <DialogHeader>Thêm danh mục xét nghiệm cận lâm sàng mới</DialogHeader>
+      {/* Add/Edit Paraclinical Category Dialog */}
+      <Dialog open={openParaclinicalDialog} handler={handleCloseDialog}>
+        <DialogHeader>
+          {isEditMode ? "Chỉnh sửa danh mục xét nghiệm cận lâm sàng" : "Thêm danh mục xét nghiệm cận lâm sàng mới"}
+        </DialogHeader>
         <DialogBody>
           <div className="grid gap-6">
             <Input
@@ -366,11 +443,47 @@ export function ClinicalCategories() {
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="text" color="red" onClick={() => setOpenParaclinicalDialog(false)}>
+          <Button variant="text" color="red" onClick={handleCloseDialog}>
             Hủy
           </Button>
-          <Button variant="gradient" color="blue" onClick={handleAddParaclinicalCategory}>
-            Thêm mới
+          <Button
+            variant="gradient"
+            color="blue"
+            onClick={isEditMode ? handleEditParaclinicalCategory : handleAddParaclinicalCategory}
+          >
+            {isEditMode ? "Cập nhật" : "Thêm mới"}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Delete Clinical Category Dialog */}
+      <Dialog open={openDeleteClinicalDialog} handler={() => setOpenDeleteClinicalDialog(false)}>
+        <DialogHeader>Xác nhận xóa</DialogHeader>
+        <DialogBody>
+          Bạn có chắc chắn muốn xóa danh mục "{selectedCategory?.name}"?
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="text" color="blue" onClick={() => setOpenDeleteClinicalDialog(false)}>
+            Hủy
+          </Button>
+          <Button variant="gradient" color="red" onClick={handleDeleteClinicalCategory}>
+            Xóa
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Delete Paraclinical Category Dialog */}
+      <Dialog open={openDeleteParaclinicalDialog} handler={() => setOpenDeleteParaclinicalDialog(false)}>
+        <DialogHeader>Xác nhận xóa</DialogHeader>
+        <DialogBody>
+          Bạn có chắc chắn muốn xóa danh mục "{selectedCategory?.name}"?
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="text" color="blue" onClick={() => setOpenDeleteParaclinicalDialog(false)}>
+            Hủy
+          </Button>
+          <Button variant="gradient" color="red" onClick={handleDeleteParaclinicalCategory}>
+            Xóa
           </Button>
         </DialogFooter>
       </Dialog>

@@ -52,7 +52,14 @@ export const useGoogleAuth = () => {
       console.error('Login Failed:', error);
       setError('Không thể kết nối với Google. Vui lòng thử lại.');
     },
-    flow: 'implicit'
+    flow: 'implicit',
+    popup_type: 'window',
+    popup_width: 500,
+    popup_height: 600,
+    popup_position: 'center',
+    ux_mode: 'popup',
+    context: 'signin',
+    prompt: 'select_account'
   });
 
   // Helper function to safely get data from localStorage

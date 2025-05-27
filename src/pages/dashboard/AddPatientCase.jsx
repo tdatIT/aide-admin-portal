@@ -9,7 +9,7 @@ import {
   Option,
   Textarea,
 } from "@material-tailwind/react";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/config/axios";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,7 @@ export function AddPatientCase() {
   const [formData, setFormData] = useState({
     name: "",
     gender: "",
-    age: "",
+    age: 0,
     occupation: "",
     medicalHistory: "",
     dentalHistory: "",
@@ -31,13 +31,13 @@ export function AddPatientCase() {
       testCategoryId: "",
       result: "",
       notes: "",
-      imageKey: null
+      imageKey: 0
     }],
     paraclinicalTests: [{
       testCategoryId: "",
       result: "",
       notes: "",
-      imageKey: null
+      imageKey: 0
     }],
     diagnosis: {
       diagnosisName: "",
@@ -54,8 +54,8 @@ export function AddPatientCase() {
     const fetchCategories = async () => {
       try {
         const [clinicalResponse, paraclinicalResponse] = await Promise.all([
-          axiosInstance.get('/api/v1/clinical-exam-categories'),
-          axiosInstance.get('/api/v1/paraclinical-test-categories')
+          axiosInstance.get('/api/v1/admin/clinical-ex-cats?page=0&limit=1000'),
+          axiosInstance.get('/api/v1/admin/paraclinical-test-cats?page=0&limit=1000')
         ]);
 
         const clinicalData = clinicalResponse.data.data?.items || [];
@@ -91,21 +91,21 @@ export function AddPatientCase() {
   const handleArrayInputChange = (arrayName, index, field, value) => {
     setFormData(prev => ({
       ...prev,
-      [arrayName]: prev[arrayName].map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
+      [arrayName]: prev[arrayName].map((item, i) => {
+        if (i !== index) return item;
+        // Nếu là suggestedTests (mảng string)
+        if (arrayName === "suggestedTests") return value;
+        // Nếu là mảng object
+        return { ...item, [field]: value };
+      })
     }));
   };
 
-  const addArrayItem = (arrayName) => {
+  const addSuggestedTest = () => {
+    if (formData.suggestedTests.some(test => !test || test.trim() === "")) return;
     setFormData(prev => ({
       ...prev,
-      [arrayName]: [...prev[arrayName], arrayName === "suggestedTests" ? "" : {
-        testCategoryId: "",
-        result: "",
-        notes: "",
-        imageKey: null
-      }]
+      suggestedTests: [...prev.suggestedTests, ""]
     }));
   };
 
@@ -121,16 +121,57 @@ export function AddPatientCase() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axiosInstance.post('/api/v1/uploads/images', formData, {
+      const response = await axiosInstance.post('/api/v1/admin/uploads/images', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      handleArrayInputChange(arrayName, index, 'imageKey', response.data.id);
+      if (response.data.data?.id) {
+        setFormData(prev => ({
+          ...prev,
+          [arrayName]: prev[arrayName].map((item, i) => {
+            if (i !== index) return item;
+            return {
+              ...item,
+              imageKey: response.data.data.id,
+              imageUrl: response.data.data.url // Sử dụng URL từ Cloudinary
+            };
+          })
+        }));
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
     }
+  };
+
+  const addArrayItem = (arrayName) => {
+    const newItem = {
+      testCategoryId: "",
+      result: "",
+      notes: "",
+      imageKey: 0,
+      imageUrl: ""
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      [arrayName]: [...prev[arrayName], newItem]
+    }));
+  };
+
+  const handleRemoveImage = (arrayName, index) => {
+    setFormData(prev => ({
+      ...prev,
+      [arrayName]: prev[arrayName].map((item, i) => {
+        if (i !== index) return item;
+        return {
+          ...item,
+          imageKey: 0,
+          imageUrl: ""
+        };
+      })
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -138,7 +179,7 @@ export function AddPatientCase() {
     setLoading(true);
 
     try {
-      await axiosInstance.post('/api/v1/patient-cases', formData);
+      await axiosInstance.post('/api/v1/admin/patient-cases', formData);
       navigate('/dashboard/patient-case');
     } catch (error) {
       console.error('Error creating patient case:', error);
@@ -158,7 +199,7 @@ export function AddPatientCase() {
         <CardBody>
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-          <Input
+            <Input
               label="Tên ca bệnh"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
@@ -229,7 +270,7 @@ export function AddPatientCase() {
               <Button
                 variant="text"
                 color="blue"
-                onClick={() => addArrayItem('suggestedTests')}
+                onClick={addSuggestedTest}
                 className="mt-2"
               >
                 Thêm xét nghiệm
@@ -264,15 +305,51 @@ export function AddPatientCase() {
                     label="Ghi chú"
                     value={exam.notes}
                     onChange={(e) => handleArrayInputChange('clinicalExams', index, 'notes', e.target.value)}
-                    required
                   />
                   <div className="mt-2">
-                    <Input
-                      type="file"
-                      label="Hình ảnh"
-                      onChange={(e) => handleImageUpload(e.target.files[0], 'clinicalExams', index)}
-                      required
-                    />
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {exam.imageKey && exam.imageUrl ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={exam.imageUrl}
+                                alt="Uploaded"
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleRemoveImage('clinicalExams', index);
+                                }}
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                              >
+                                <XMarkIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <PhotoIcon className="w-8 h-8 mb-2 text-gray-500" />
+                              <p className="mb-2 text-sm text-gray-500">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500">PNG, JPG or JPEG</p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e.target.files[0], 'clinicalExams', index)}
+                        />
+                      </label>
+                    </div>
                   </div>
                   <Button
                     variant="text"
@@ -290,7 +367,10 @@ export function AddPatientCase() {
                 onClick={() => addArrayItem('clinicalExams')}
                 className="mt-2"
               >
-                Thêm khám lâm sàng
+                <span className="flex items-center gap-2">
+                  <PlusIcon className="h-5 w-5" />
+                  Thêm khám lâm sàng
+                </span>
               </Button>
             </div>
 
@@ -322,15 +402,52 @@ export function AddPatientCase() {
                     label="Ghi chú"
                     value={test.notes}
                     onChange={(e) => handleArrayInputChange('paraclinicalTests', index, 'notes', e.target.value)}
-                    required
+
                   />
                   <div className="mt-2">
-                    <Input
-                      type="file"
-                      label="Hình ảnh"
-                      onChange={(e) => handleImageUpload(e.target.files[0], 'paraclinicalTests', index)}
-                      required
-                    />
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {test.imageKey && test.imageUrl ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={test.imageUrl}
+                                alt="Uploaded"
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleRemoveImage('paraclinicalTests', index);
+                                }}
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                              >
+                                <XMarkIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <PhotoIcon className="w-8 h-8 mb-2 text-gray-500" />
+                              <p className="mb-2 text-sm text-gray-500">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500">PNG, JPG or JPEG</p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e.target.files[0], 'paraclinicalTests', index)}
+                        />
+                      </label>
+                    </div>
                   </div>
                   <Button
                     variant="text"
@@ -348,7 +465,10 @@ export function AddPatientCase() {
                 onClick={() => addArrayItem('paraclinicalTests')}
                 className="mt-2"
               >
-                Thêm xét nghiệm cận lâm sàng
+                <span className="flex items-center gap-2">
+                  <PlusIcon className="h-5 w-5" />
+                  Thêm xét nghiệm cận lâm sàng
+                </span>
               </Button>
             </div>
 
@@ -371,7 +491,7 @@ export function AddPatientCase() {
                   label="Ghi chú"
                   value={formData.diagnosis.notes}
                   onChange={(e) => handleNestedInputChange('diagnosis', 'notes', e.target.value)}
-                  required
+
                 />
               </div>
             </div>
@@ -389,7 +509,7 @@ export function AddPatientCase() {
                   label="Ghi chú"
                   value={formData.treatment.notes}
                   onChange={(e) => handleNestedInputChange('treatment', 'notes', e.target.value)}
-                  required
+
                 />
               </div>
             </div>
