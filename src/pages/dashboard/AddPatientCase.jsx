@@ -8,6 +8,7 @@ import {
   Select,
   Option,
   Textarea,
+  Spinner,
 } from "@material-tailwind/react";
 import { PlusIcon, XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
@@ -24,31 +25,29 @@ export function AddPatientCase() {
     gender: "",
     age: 0,
     occupation: "",
+    reasonForVisit: "",
     medicalHistory: "",
     dentalHistory: "",
     suggestedTests: [""],
     clinicalExams: [{
       testCategoryId: "",
-      result: "",
       notes: "",
-      imageKey: 0
+      imageKeys: []
     }],
     paraclinicalTests: [{
       testCategoryId: "",
-      result: "",
       notes: "",
-      imageKey: 0
+      imageKeys: []
     }],
     diagnosis: {
       diagnosisName: "",
       description: "",
-      notes: ""
     },
     treatment: {
       description: "",
-      notes: ""
     }
   });
+  const [uploadingImages, setUploadingImages] = useState({});
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -116,42 +115,49 @@ export function AddPatientCase() {
     }));
   };
 
-  const handleImageUpload = async (file, arrayName, index) => {
+  const handleImageUpload = async (files, arrayName, index) => {
+    setUploadingImages(prev => ({ ...prev, [`${arrayName}-${index}`]: true }));
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const formDataUpload = new FormData();
+      Array.from(files).forEach(file => {
+        formDataUpload.append('files', file);
+      });
 
-      const response = await axiosInstance.post('/api/v1/admin/uploads/images', formData, {
+      const response = await axiosInstance.post('/api/v1/admin/uploads/images', formDataUpload, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      if (response.data.data?.id) {
+      if (response.data.data) {
+        const newImages = response.data.data.map(img => ({
+          id: img.id,
+          publicUrl: img.publicUrl
+        }));
         setFormData(prev => ({
           ...prev,
           [arrayName]: prev[arrayName].map((item, i) => {
             if (i !== index) return item;
             return {
               ...item,
-              imageKey: response.data.data.id,
-              imageUrl: response.data.data.url // Sử dụng URL từ Cloudinary
+              imageObjects: [...newImages, ...(item.imageObjects || [])],
+              imageKeys: [...newImages.map(img => img.id), ...(item.imageKeys || [])]
             };
           })
         }));
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error uploading images:', error);
+    } finally {
+      setUploadingImages(prev => ({ ...prev, [`${arrayName}-${index}`]: false }));
     }
   };
 
   const addArrayItem = (arrayName) => {
     const newItem = {
       testCategoryId: "",
-      result: "",
       notes: "",
-      imageKey: 0,
-      imageUrl: ""
+      imageKeys: []
     };
 
     setFormData(prev => ({
@@ -160,15 +166,15 @@ export function AddPatientCase() {
     }));
   };
 
-  const handleRemoveImage = (arrayName, index) => {
+  const handleRemoveImage = (arrayName, index, imageIdToRemove) => {
     setFormData(prev => ({
       ...prev,
       [arrayName]: prev[arrayName].map((item, i) => {
         if (i !== index) return item;
         return {
           ...item,
-          imageKey: 0,
-          imageUrl: ""
+          imageObjects: (item.imageObjects || []).filter(img => img.id !== imageIdToRemove),
+          imageKeys: (item.imageKeys || []).filter(id => id !== imageIdToRemove)
         };
       })
     }));
@@ -198,7 +204,6 @@ export function AddPatientCase() {
         </CardHeader>
         <CardBody>
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-
             <Input
               label="Tên ca bệnh"
               value={formData.name}
@@ -232,6 +237,12 @@ export function AddPatientCase() {
               label="Nghề nghiệp"
               value={formData.occupation}
               onChange={(e) => handleInputChange('occupation', e.target.value)}
+            />
+
+            <Textarea
+              label="Lý do đến khám"
+              value={formData.reasonForVisit}
+              onChange={(e) => handleInputChange('reasonForVisit', e.target.value)}
               required
             />
 
@@ -281,7 +292,7 @@ export function AddPatientCase() {
               <Typography variant="h6" className="mb-2">Khám lâm sàng</Typography>
               {formData.clinicalExams.map((exam, index) => (
                 <div key={index} className="border p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="mb-4">
                     <Select
                       label="Danh mục xét nghiệm"
                       value={exam.testCategoryId}
@@ -289,17 +300,11 @@ export function AddPatientCase() {
                       required
                     >
                       {clinicalCategories.map((category) => (
-                        <Option key={category.id} value={category.id}>
+                        <Option key={category.id} value={category.id.toString()}>
                           {category.name}
                         </Option>
                       ))}
                     </Select>
-                    <Input
-                      label="Kết quả"
-                      value={exam.result}
-                      onChange={(e) => handleArrayInputChange('clinicalExams', index, 'result', e.target.value)}
-                      required
-                    />
                   </div>
                   <Textarea
                     label="Ghi chú"
@@ -307,49 +312,52 @@ export function AddPatientCase() {
                     onChange={(e) => handleArrayInputChange('clinicalExams', index, 'notes', e.target.value)}
                   />
                   <div className="mt-2">
-                    <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 overflow-hidden">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full h-full">
-                          {exam.imageKey && exam.imageUrl ? (
-                            <div className="relative w-full h-full flex items-center justify-center">
-                              <img
-                                src={exam.imageUrl}
-                                alt="Uploaded"
-                                className="max-w-full max-h-full object-contain"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
-                                }}
-                              />
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleRemoveImage('clinicalExams', index);
-                                }}
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                              >
-                                <XMarkIcon className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <PhotoIcon className="w-8 h-8 mb-2 text-gray-500" />
-                              <p className="mb-2 text-sm text-gray-500">
-                                <span className="font-semibold">Click to upload</span> or drag and drop
-                              </p>
-                              <p className="text-xs text-gray-500">PNG, JPG or JPEG</p>
-                            </>
-                          )}
+                    <div className="flex items-center w-full gap-2">
+                      {exam.imageObjects && exam.imageObjects.map((img, imgIndex) => (
+                        <div key={imgIndex} className="relative w-24 h-24 flex-shrink-0">
+                          <img
+                            src={img.publicUrl}
+                            alt={`Uploaded ${imgIndex + 1}`}
+                            className="w-full h-full object-cover rounded border"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleRemoveImage('clinicalExams', index, img.id);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
                         </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(e.target.files[0], 'clinicalExams', index)}
-                        />
-                      </label>
+                      ))}
+                      {exam.imageKeys && exam.imageKeys.length < 5 && (
+                        <label className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 flex-shrink-0 relative">
+                          {uploadingImages[`clinicalExams-${index}`] ? (
+                            <Spinner className="w-8 h-8 text-gray-400" />
+                          ) : (
+                            <PhotoIcon className="w-8 h-8 text-gray-400" />
+                          )}
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            multiple
+                            disabled={uploadingImages[`clinicalExams-${index}`]}
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files).slice(0, 5 - (exam.imageKeys?.length || 0));
+                              handleImageUpload(files, 'clinicalExams', index);
+                            }}
+                          />
+                        </label>
+                      )}
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">Lưu ý: Chỉ cho phép các định dạng .jpg, .jpeg, .png với kích thước ảnh tối đa 5MB</p>
                   </div>
                   <Button
                     variant="text"
@@ -378,7 +386,7 @@ export function AddPatientCase() {
               <Typography variant="h6" className="mb-2">Xét nghiệm cận lâm sàng</Typography>
               {formData.paraclinicalTests.map((test, index) => (
                 <div key={index} className="border p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="mb-4">
                     <Select
                       label="Danh mục xét nghiệm"
                       value={test.testCategoryId}
@@ -386,68 +394,64 @@ export function AddPatientCase() {
                       required
                     >
                       {paraclinicalCategories.map((category) => (
-                        <Option key={category.id} value={category.id}>
+                        <Option key={category.id} value={category.id.toString()}>
                           {category.name}
                         </Option>
                       ))}
                     </Select>
-                    <Input
-                      label="Kết quả"
-                      value={test.result}
-                      onChange={(e) => handleArrayInputChange('paraclinicalTests', index, 'result', e.target.value)}
-                      required
-                    />
                   </div>
                   <Textarea
                     label="Ghi chú"
                     value={test.notes}
                     onChange={(e) => handleArrayInputChange('paraclinicalTests', index, 'notes', e.target.value)}
-
                   />
                   <div className="mt-2">
-                    <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 overflow-hidden">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full h-full">
-                          {test.imageKey && test.imageUrl ? (
-                            <div className="relative w-full h-full flex items-center justify-center">
-                              <img
-                                src={test.imageUrl}
-                                alt="Uploaded"
-                                className="max-w-full max-h-full object-contain"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
-                                }}
-                              />
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleRemoveImage('paraclinicalTests', index);
-                                }}
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                              >
-                                <XMarkIcon className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <PhotoIcon className="w-8 h-8 mb-2 text-gray-500" />
-                              <p className="mb-2 text-sm text-gray-500">
-                                <span className="font-semibold">Click to upload</span> or drag and drop
-                              </p>
-                              <p className="text-xs text-gray-500">PNG, JPG or JPEG</p>
-                            </>
-                          )}
+                    <div className="flex items-center w-full gap-2">
+                      {test.imageObjects && test.imageObjects.map((img, imgIndex) => (
+                        <div key={imgIndex} className="relative w-24 h-24 flex-shrink-0">
+                          <img
+                            src={img.publicUrl}
+                            alt={`Uploaded ${imgIndex + 1}`}
+                            className="w-full h-full object-cover rounded border"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleRemoveImage('paraclinicalTests', index, img.id);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
                         </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(e.target.files[0], 'paraclinicalTests', index)}
-                        />
-                      </label>
+                      ))}
+                      {test.imageKeys && test.imageKeys.length < 5 && (
+                        <label className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 flex-shrink-0 relative">
+                          {uploadingImages[`paraclinicalTests-${index}`] ? (
+                            <Spinner className="w-8 h-8 text-gray-400" />
+                          ) : (
+                            <PhotoIcon className="w-8 h-8 text-gray-400" />
+                          )}
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            multiple
+                            disabled={uploadingImages[`paraclinicalTests-${index}`]}
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files).slice(0, 5 - (test.imageKeys?.length || 0));
+                              handleImageUpload(files, 'paraclinicalTests', index);
+                            }}
+                          />
+                        </label>
+                      )}
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">Lưu ý: Chỉ cho phép các định dạng .jpg, .jpeg, .png với kích thước ảnh tối đa 5MB</p>
                   </div>
                   <Button
                     variant="text"
@@ -487,12 +491,6 @@ export function AddPatientCase() {
                   onChange={(e) => handleNestedInputChange('diagnosis', 'description', e.target.value)}
                   required
                 />
-                <Textarea
-                  label="Ghi chú"
-                  value={formData.diagnosis.notes}
-                  onChange={(e) => handleNestedInputChange('diagnosis', 'notes', e.target.value)}
-
-                />
               </div>
             </div>
 
@@ -504,12 +502,6 @@ export function AddPatientCase() {
                   value={formData.treatment.description}
                   onChange={(e) => handleNestedInputChange('treatment', 'description', e.target.value)}
                   required
-                />
-                <Textarea
-                  label="Ghi chú"
-                  value={formData.treatment.notes}
-                  onChange={(e) => handleNestedInputChange('treatment', 'notes', e.target.value)}
-
                 />
               </div>
             </div>

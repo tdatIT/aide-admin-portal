@@ -3,11 +3,13 @@ import {
   RectangleStackIcon,
   ClipboardDocumentIcon,
   BeakerIcon,
+  UsersIcon,
 } from "@heroicons/react/24/solid";
 import PatientCaseList from "@/pages/dashboard/PatientCaseList";
 import { SignIn, SignUp } from "@/pages/auth";
 import { ClinicalCategories } from "@/pages/dashboard/ClinicalCategories";
 import { AddPatientCase } from "@/pages/dashboard/AddPatientCase";
+import UserManagement from "@/pages/dashboard/UserManagement";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -29,6 +31,12 @@ export const sidebarRoutes = [
         name: "Danh mục khám/XN",
         path: "/clinical-categories",
         element: <ClinicalCategories />,
+      },
+      {
+        icon: <UsersIcon {...icon} />,
+        name: "Quản lý người dùng",
+        path: "/users",
+        element: <UserManagement />,
       },
     ],
   },
@@ -67,7 +75,17 @@ export const dashboardRoutes = [
   },
 ];
 
-// Kết hợp tất cả routes
-export const routes = [...sidebarRoutes, ...authRoutes, ...dashboardRoutes];
+const routes = [
+  {
+    type: "collapse",
+    name: "Quản lý người dùng",
+    key: "user-management",
+    route: "/dashboard/users",
+    icon: <UsersIcon className="h-5 w-5" />,
+    component: <UserManagement />,
+    noCollapse: true,
+  },
+  // ... existing routes ...
+];
 
 export default routes;

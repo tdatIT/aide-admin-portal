@@ -124,11 +124,16 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                 </div>
               </div>
 
+
               <div className="bg-gray-50 rounded-lg p-4">
                 <Typography variant="h6" color="blue-gray" className="mb-4 border-b pb-2">
                   Tiền sử
                 </Typography>
                 <div className="space-y-3">
+                  <div className="flex items-start">
+                    <Typography variant="small" color="blue-gray" className="font-bold w-32">Tiền sử nha khoa:</Typography>
+                    <Typography className="flex-1">{patientCase.v || "Không có"}</Typography>
+                  </div>
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Tiền sử y khoa:</Typography>
                     <Typography className="flex-1">{patientCase.medicalHistory || "Không có"}</Typography>
@@ -170,18 +175,31 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   {patientCase.clinicalExams?.length > 0 ? (
                     patientCase.clinicalExams.map((exam) => (
                       <div key={exam.id} className="border rounded-lg p-4 bg-white">
-                        <Typography variant="small" color="blue-gray" className="font-bold mb-2">{exam.name}</Typography>
+
                         <div className="space-y-2">
+                          <div className="flex items-start">
+                            <Typography variant="small" color="blue-gray" className="font-bold w-20">Danh mục:</Typography>
+                            <Typography variant="small" className="flex-1">{exam.name}</Typography>
+                          </div>
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
                             <Typography variant="small" className="flex-1">{exam.notes || "Không có"}</Typography>
                           </div>
-                          <div className="flex items-start">
-                            <Typography variant="small" color="blue-gray" className="font-bold w-20">Kết quả:</Typography>
-                            <Typography variant="small" className="flex-1">{exam.result || "Không có"}</Typography>
-                          </div>
+
+                          {exam.imageUrls && exam.imageUrls.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {exam.imageUrls.map((url, idx) => (
+                                <img
+                                  key={idx}
+                                  src={url}
+                                  alt={exam.name}
+                                  className="w-24 h-24 object-cover rounded border cursor-pointer"
+                                  onClick={() => window.open(url, '_blank')}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {renderImage(exam.imageUrl, exam.name)}
                       </div>
                     ))
                   ) : (
@@ -198,18 +216,29 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   {patientCase.paraclinicalTests?.length > 0 ? (
                     patientCase.paraclinicalTests.map((test) => (
                       <div key={test.id} className="border rounded-lg p-4 bg-white">
-                        <Typography variant="small" color="blue-gray" className="font-bold mb-2">{test.name}</Typography>
-                        <div className="space-y-2">
+                         <div className="space-y-2">
+                          <div className="flex items-start">
+                            <Typography variant="small" color="blue-gray" className="font-bold w-20">Danh mục:</Typography>
+                            <Typography variant="small" className="flex-1">{test.name}</Typography>
+                          </div>
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
                             <Typography variant="small" className="flex-1">{test.notes || "Không có"}</Typography>
                           </div>
-                          <div className="flex items-start">
-                            <Typography variant="small" color="blue-gray" className="font-bold w-20">Kết quả:</Typography>
-                            <Typography variant="small" className="flex-1">{test.result || "Không có"}</Typography>
-                          </div>
+                          {test.imageUrls && test.imageUrls.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {test.imageUrls.map((url, idx) => (
+                                <img
+                                  key={idx}
+                                  src={url}
+                                  alt={test.name}
+                                  className="w-24 h-24 object-cover rounded border cursor-pointer"
+                                  onClick={() => window.open(url, '_blank')}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {renderImage(test.imageUrl, test.name)}
                       </div>
                     ))
                   ) : (
@@ -225,16 +254,12 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                 <div className="border rounded-lg p-4 bg-white">
                   <div className="space-y-2">
                     <div className="flex items-start">
-                      <Typography variant="small" color="blue-gray" className="font-bold w-20">Tên:</Typography>
+                      <Typography variant="small" color="blue-gray" className="font-bold w-32">Tên chẩn đoán:</Typography>
                       <Typography variant="small" className="flex-1">{patientCase.diagnosis?.diagnosisName || "Không có"}</Typography>
                     </div>
                     <div className="flex items-start">
-                      <Typography variant="small" color="blue-gray" className="font-bold w-20">Mô tả:</Typography>
+                      <Typography variant="small" color="blue-gray" className="font-bold w-32">Mô tả:</Typography>
                       <Typography variant="small" className="flex-1">{patientCase.diagnosis?.description || "Không có"}</Typography>
-                    </div>
-                    <div className="flex items-start">
-                      <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
-                      <Typography variant="small" className="flex-1">{patientCase.diagnosis?.notes || "Không có"}</Typography>
                     </div>
                   </div>
                 </div>
@@ -247,12 +272,8 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                 <div className="border rounded-lg p-4 bg-white">
                   <div className="space-y-2">
                     <div className="flex items-start">
-                      <Typography variant="small" color="blue-gray" className="font-bold w-20">Mô tả:</Typography>
+                      <Typography variant="small" color="blue-gray" className="font-bold w-32">Mô tả:</Typography>
                       <Typography variant="small" className="flex-1">{patientCase.treatment?.description || "Không có"}</Typography>
-                    </div>
-                    <div className="flex items-start">
-                      <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
-                      <Typography variant="small" className="flex-1">{patientCase.treatment?.notes || "Không có"}</Typography>
                     </div>
                   </div>
                 </div>
@@ -277,10 +298,10 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
             onClick={() => navigate(`/dashboard/patient-case/edit/${patientCase.id}`)}
             className="mr-2"
           >
-          Chỉnh sửa
+            Chỉnh sửa
           </Button>
 
-          <Button  ariant="text"
+          <Button ariant="text"
             color="red"
             size="sm" onClick={handleOpen}>
             Đóng
