@@ -131,16 +131,16 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                 </Typography>
                 <div className="space-y-3">
                   <div className="flex items-start">
-                    <Typography variant="small" color="blue-gray" className="font-bold w-32">Tiền sử nha khoa:</Typography>
-                    <Typography className="flex-1">{patientCase.v || "Không có"}</Typography>
-                  </div>
-                  <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Tiền sử y khoa:</Typography>
                     <Typography className="flex-1">{patientCase.medicalHistory || "Không có"}</Typography>
                   </div>
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Tiền sử nha khoa:</Typography>
                     <Typography className="flex-1">{patientCase.dentalHistory || "Không có"}</Typography>
+                  </div>
+                  <div className="flex items-start">
+                    <Typography variant="small" color="blue-gray" className="font-bold w-32">Bệnh sử:</Typography>
+                    <Typography className="flex-1">{patientCase.clinicalHistory || "Không có"}</Typography>
                   </div>
                 </div>
               </div>

@@ -28,6 +28,7 @@ export function AddPatientCase() {
     reasonForVisit: "",
     medicalHistory: "",
     dentalHistory: "",
+    clinicalHistory: "",
     suggestedTests: [""],
     clinicalExams: [{
       testCategoryId: "",
@@ -257,6 +258,13 @@ export function AddPatientCase() {
               label="Tiền sử nha khoa"
               value={formData.dentalHistory}
               onChange={(e) => handleInputChange('dentalHistory', e.target.value)}
+              required
+            />
+
+            <Textarea
+              label="Bệnh sử"
+              value={formData.clinicalHistory}
+              onChange={(e) => handleInputChange('clinicalHistory', e.target.value)}
               required
             />
 
