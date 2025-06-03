@@ -103,11 +103,11 @@ export default function PatientCaseList() {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <Card>
-        <CardHeader variant="gradient" color="light-green" className="mb-8 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <CardHeader variant="gradient" color="blue" className="mb-8 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <Typography variant="h6" color="white">
             Danh sách ca bệnh
           </Typography>
-          <Button color="white" className="flex items-center gap-2 text-light-green-700" onClick={handleAddPatientCase}>
+          <Button color="white" className="flex items-center gap-2 text-blue-700" onClick={handleAddPatientCase}>
             <PlusIcon className="h-5 w-5" />
             Thêm mới ca bệnh
           </Button>
@@ -175,7 +175,7 @@ export default function PatientCaseList() {
           <div className="flex justify-end items-center gap-2 mt-4">
             <Button
               variant="outlined"
-              color="light-green"
+              color="blue"
               size="sm"
               className="flex items-center gap-1"
               disabled={page === 0}
@@ -189,7 +189,7 @@ export default function PatientCaseList() {
             </span>
             <Button
               variant="outlined"
-              color="light-green"
+              color="blue"
               size="sm"
               className="flex items-center gap-1"
               disabled={!hasMore && (page + 1) * size >= total}

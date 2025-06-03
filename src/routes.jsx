@@ -3,11 +3,14 @@ import {
   RectangleStackIcon,
   ClipboardDocumentIcon,
   BeakerIcon,
+  UsersIcon,
 } from "@heroicons/react/24/solid";
 import PatientCaseList from "@/pages/dashboard/PatientCaseList";
 import { SignIn, SignUp } from "@/pages/auth";
 import { ClinicalCategories } from "@/pages/dashboard/ClinicalCategories";
 import { AddPatientCase } from "@/pages/dashboard/AddPatientCase";
+import UsersPage from "./pages/dashboard/UsersPage";
+import UpdatePatientCase from "./pages/dashboard/UpdatePatientCase";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -29,6 +32,12 @@ export const sidebarRoutes = [
         name: "Danh mục khám/XN",
         path: "/clinical-categories",
         element: <ClinicalCategories />,
+      },
+      {
+        icon: <UsersIcon {...icon} />,
+        name: "Quản lý người dùng",
+        path: "/users",
+        element: <UsersPage />,
       },
     ],
   },
@@ -62,6 +71,11 @@ export const dashboardRoutes = [
         name: "Thêm ca bệnh",
         path: "/patient-case/add",
         element: <AddPatientCase />,
+      },
+      {
+        name: "Chỉnh sửa ca bệnh",
+        path: "/patient-case/edit/:id",
+        element: <UpdatePatientCase />,
       },
     ],
   },
