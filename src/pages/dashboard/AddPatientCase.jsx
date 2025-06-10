@@ -32,11 +32,13 @@ export function AddPatientCase() {
     suggestedTests: [""],
     clinicalExams: [{
       testCategoryId: "",
+      textResult: "",
       notes: "",
       imageKeys: []
     }],
     paraclinicalTests: [{
       testCategoryId: "",
+      textResult: "",
       notes: "",
       imageKeys: []
     }],
@@ -314,6 +316,13 @@ export function AddPatientCase() {
                       ))}
                     </Select>
                   </div>
+                  <div className="mb-4">
+                    <Input
+                      label="Kết quả"
+                      value={exam.textResult}
+                      onChange={(e) => handleArrayInputChange('clinicalExams', index, 'textResult', e.target.value)}
+                    />
+                  </div>
                   <Textarea
                     label="Ghi chú"
                     value={exam.notes}
@@ -408,6 +417,14 @@ export function AddPatientCase() {
                       ))}
                     </Select>
                   </div>
+                  <div className="mb-4">
+                    <Input
+                      label="Kết quả"
+                      value={test.textResult}
+                      onChange={(e) => handleArrayInputChange('paraclinicalTests', index, 'textResult', e.target.value)}
+                    />
+                  </div>
+
                   <Textarea
                     label="Ghi chú"
                     value={test.notes}

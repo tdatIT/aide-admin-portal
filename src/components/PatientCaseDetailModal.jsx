@@ -179,13 +179,16 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                         <div className="space-y-2">
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Danh mục:</Typography>
-                            <Typography variant="small" className="flex-1">{exam.name}</Typography>
+                            <Typography variant="small" className="flex-1">{exam.testName}</Typography>
+                          </div>
+                          <div className="flex items-start">
+                            <Typography variant="small" color="blue-gray" className="font-bold w-20">Kết quả :</Typography>
+                            <Typography variant="small" className="flex-1">{exam.textResult || "Không có"}</Typography>
                           </div>
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
                             <Typography variant="small" className="flex-1">{exam.notes || "Không có"}</Typography>
                           </div>
-
                           {exam.imageUrls && exam.imageUrls.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               {exam.imageUrls.map((url, idx) => (
@@ -216,7 +219,7 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   {patientCase.paraclinicalTests?.length > 0 ? (
                     patientCase.paraclinicalTests.map((test) => (
                       <div key={test.id} className="border rounded-lg p-4 bg-white">
-                         <div className="space-y-2">
+                        <div className="space-y-2">
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Danh mục:</Typography>
                             <Typography variant="small" className="flex-1">{test.name}</Typography>
