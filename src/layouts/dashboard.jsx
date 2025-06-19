@@ -8,7 +8,7 @@ import {
   Footer,
 } from "@/widgets/layout";
 import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
-import { sidebarRoutes, dashboardRoutes } from "@/Routes";
+import { sidebarRoutes, dashboardRoutes } from "@/routes";
 
 // Lazy load the Configurator component
 const Configurator = lazy(() => import("@/widgets/layout").then(module => ({ default: module.Configurator })));
@@ -31,7 +31,7 @@ export function Dashboard() {
       >
         <DashboardNavbar />
         <Suspense fallback={null}>
-          <Configurator />
+        <Configurator />
         </Suspense>
         <IconButton
           size="lg"

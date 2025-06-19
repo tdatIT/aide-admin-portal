@@ -1,10 +1,8 @@
 import {
-  ServerStackIcon,
-  RectangleStackIcon,
   ClipboardDocumentIcon,
   BeakerIcon,
   UsersIcon,
-  ChartBarIcon,
+  ChartBarIcon
 } from "@heroicons/react/24/solid";
 import { lazy, Suspense } from "react";
 import { SignIn, SignUp } from "@/pages/auth";
@@ -112,6 +110,6 @@ export const dashboardRoutes = [
 ];
 
 // Kết hợp tất cả routes
-export const routes = [...sidebarRoutes, ...authRoutes, ...dashboardRoutes];
+export const Routes = [...sidebarRoutes, ...authRoutes, ...dashboardRoutes];
 
-export default routes;
+export default Routes;
