@@ -1,17 +1,14 @@
 import { Routes, Route } from "react-router-dom";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import { IconButton } from "@material-tailwind/react";
-import { lazy, Suspense } from "react";
 import {
   Sidenav,
   DashboardNavbar,
+  Configurator,
   Footer,
 } from "@/widgets/layout";
 import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
-import { sidebarRoutes, dashboardRoutes } from "@/routes";
-
-// Lazy load the Configurator component
-const Configurator = lazy(() => import("@/widgets/layout").then(module => ({ default: module.Configurator })));
+import { sidebarRoutes, dashboardRoutes } from "@/Routes";
 
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
@@ -30,9 +27,7 @@ export function Dashboard() {
         }`}
       >
         <DashboardNavbar />
-        <Suspense fallback={null}>
         <Configurator />
-        </Suspense>
         <IconButton
           size="lg"
           color="white"

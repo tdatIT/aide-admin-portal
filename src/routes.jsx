@@ -110,6 +110,6 @@ export const dashboardRoutes = [
 ];
 
 // Kết hợp tất cả routes
-export const Routes = [...sidebarRoutes, ...authRoutes, ...dashboardRoutes];
+export const appRoutes = [...sidebarRoutes, ...authRoutes, ...dashboardRoutes];
 
-export default Routes;
+export default appRoutes;

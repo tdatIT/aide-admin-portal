@@ -5,7 +5,7 @@ import {
   UserPlusIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/solid";
-import routes from "@/routes";
+import appRoutes from "@/Routes";
 
 export function Auth() {
   const navbarRoutes = [
@@ -34,7 +34,7 @@ export function Auth() {
   return (
     <div className="relative min-h-screen w-full">
       <Routes>
-        {routes.map(
+        {appRoutes.map(
           ({ layout, pages }) =>
             layout === "auth" &&
             pages.map(({ path, element }) => (
