@@ -14,6 +14,7 @@ const AddPatientCase = lazy(() => import("@/pages/dashboard/AddPatientCase"));
 const UsersPage = lazy(() => import("./pages/dashboard/UsersPage"));
 const UpdatePatientCase = lazy(() => import("./pages/dashboard/UpdatePatientCase"));
 const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+const UpdateTestResults = lazy(() => import("@/pages/dashboard/UpdateTestResults"));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
@@ -104,6 +105,11 @@ export const dashboardRoutes = [
         name: "Chỉnh sửa ca bệnh",
         path: "/patient-case/edit/:id",
         element: <LazyComponent component={UpdatePatientCase} />,
+      },
+      {
+        name: "Cập nhật kết quả xét nghiệm",
+        path: "/patient-case/edit/:id/test-results",
+        element: <LazyComponent component={UpdateTestResults} />,
       },
     ],
   },

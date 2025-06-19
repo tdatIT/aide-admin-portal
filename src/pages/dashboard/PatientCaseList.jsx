@@ -20,7 +20,6 @@ const columns = [
   { label: "ID", key: "id" },
   { label: "Tên ca bệnh", key: "name" },
   { label: "Yêu cầu", key: "requestCounter" },
-  { label: "Mô tả điều trị", key: "treatmentDescription" },
   { label: "Trạng thái", key: "status" },
   { label: "Ngày tạo", key: "createdAt" },
   { label: "Người tạo", key: "createdBy" },
@@ -142,7 +141,6 @@ export default function PatientCaseList() {
                     <td className="px-4 py-2 text-sm">{patient.id}</td>
                     <td className="px-4 py-2 max-w-xs truncate text-sm" title={patient.name}>{patient.name}</td>
                     <td className="px-4 py-2 text-sm">{patient.requestCounter}</td>
-                    <td className="px-4 py-2 max-w-xs truncate text-sm" title={patient.treatment?.description}>{patient.treatment?.description || ""}</td>
                     <td className="px-4 py-2 text-sm">
                       {patient.status === "PUBLISHED" ? (
                         <Chip color="green" size="sm" value="PUBLISHED" className="font-bold" />

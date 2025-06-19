@@ -164,6 +164,12 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   )}
                 </div>
               </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <Typography variant="h6" color="blue-gray" className="mb-4 border-b pb-2">
+                  Hướng dẫn cho model AI
+                </Typography>
+                <Typography variant="small" className="flex-1">{patientCase.instruction || "Không có"}</Typography>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -172,8 +178,8 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   Khám lâm sàng
                 </Typography>
                 <div className="space-y-4">
-                  {patientCase.clinicalExams?.length > 0 ? (
-                    patientCase.clinicalExams.map((exam) => (
+                  {patientCase.clinicalExResults?.length > 0 ? (
+                    patientCase.clinicalExResults.map((exam) => (
                       <div key={exam.id} className="border rounded-lg p-4 bg-white">
 
                         <div className="space-y-2">
@@ -185,15 +191,15 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
                             <Typography variant="small" className="flex-1">{exam.notes || "Không có"}</Typography>
                           </div>
-                          {exam.imageUrls && exam.imageUrls.length > 0 && (
+                          {exam.images && exam.images.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {exam.imageUrls.map((url, idx) => (
+                              {exam.images.map((img, idx) => (
                                 <img
                                   key={idx}
-                                  src={url}
+                                  src={img.url}
                                   alt={exam.name}
                                   className="w-24 h-24 object-cover rounded border cursor-pointer"
-                                  onClick={() => window.open(url, '_blank')}
+                                  onClick={() => window.open(img.url, '_blank')}
                                 />
                               ))}
                             </div>
@@ -212,8 +218,8 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   Xét nghiệm cận lâm sàng
                 </Typography>
                 <div className="space-y-4">
-                  {patientCase.paraclinicalTests?.length > 0 ? (
-                    patientCase.paraclinicalTests.map((test) => (
+                  {patientCase.paraclinicalExResults?.length > 0 ? (
+                    patientCase.paraclinicalExResults.map((test) => (
                       <div key={test.id} className="border rounded-lg p-4 bg-white">
                         <div className="space-y-2">
                           <div className="flex items-start">
@@ -224,15 +230,15 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
                             <Typography variant="small" className="flex-1">{test.notes || "Không có"}</Typography>
                           </div>
-                          {test.imageUrls && test.imageUrls.length > 0 && (
+                          {test.images && test.images.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {test.imageUrls.map((url, idx) => (
+                              {test.images.map((img, idx) => (
                                 <img
                                   key={idx}
-                                  src={url}
+                                  src={img.url}
                                   alt={test.name}
                                   className="w-24 h-24 object-cover rounded border cursor-pointer"
-                                  onClick={() => window.open(url, '_blank')}
+                                  onClick={() => window.open(img.url, '_blank')}
                                 />
                               ))}
                             </div>
@@ -253,12 +259,16 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                 <div className="border rounded-lg p-4 bg-white">
                   <div className="space-y-2">
                     <div className="flex items-start">
-                      <Typography variant="small" color="blue-gray" className="font-bold w-32">Tên chẩn đoán:</Typography>
-                      <Typography variant="small" className="flex-1">{patientCase.diagnosis?.diagnosisName || "Không có"}</Typography>
+                      <Typography variant="small" color="blue-gray" className="font-bold w-32">Chẩn đoán sơ bộ:</Typography>
+                      <Typography variant="small" className="flex-1">{patientCase.diagnosis?.diagPrelim || "Không có"}</Typography>
+                    </div>
+                    <div className="flex items-start">
+                      <Typography variant="small" color="blue-gray" className="font-bold w-32">Chẩn đoán phân biệt:</Typography>
+                      <Typography variant="small" className="flex-1">{patientCase.diagnosis?.diagDiff || "Không có"}</Typography>
                     </div>
                     <div className="flex items-start">
                       <Typography variant="small" color="blue-gray" className="font-bold w-32">Mô tả:</Typography>
-                      <Typography variant="small" className="flex-1">{patientCase.diagnosis?.description || "Không có"}</Typography>
+                      <Typography variant="small" className="flex-1">{patientCase.diagnosis?.notes || "Không có"}</Typography>
                     </div>
                   </div>
                 </div>
@@ -272,7 +282,7 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                   <div className="space-y-2">
                     <div className="flex items-start">
                       <Typography variant="small" color="blue-gray" className="font-bold w-32">Mô tả:</Typography>
-                      <Typography variant="small" className="flex-1">{patientCase.treatment?.description || "Không có"}</Typography>
+                      <Typography variant="small" className="flex-1">{patientCase.treatment?.treatmentNotes || "Không có"}</Typography>
                     </div>
                   </div>
                 </div>

@@ -13,319 +13,270 @@ import {
 import { PlusIcon, XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/config/axios";
-import { useNavigate } from "react-router-dom";
-import CreatableSelect from 'react-select/creatable';
+import { useNavigate, useParams } from "react-router-dom";
 
-export function AddPatientCase() {
+const ACTIONS = {
+  CREATE: "CREATE",
+  UPDATE: "UPDATE",
+  REMOVE: "REMOVE",
+};
+
+const UpdateTestResults = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [clinicalCategories, setClinicalCategories] = useState([]);
   const [paraclinicalCategories, setParaclinicalCategories] = useState([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    gender: "",
-    age: 60,
-    mode: "",
-    occupation: "",
-    reasonForVisit: "",
-    medicalHistory: "",
-    dentalHistory: "",
-    clinicalHistory: "",
-    instruction: "",
-    suggestedTests: [],
-    clinicalExams: [{
-      testCategoryId: 1,
-      textResult: "",
-      notes: "",
-      imageKeys: []
-    }],
-    paraclinicalTests: [{
-      testCategoryId: 1,
-      textResult: "",
-      notes: "",
-      imageKeys: []
-    }],
-    diagnosis: {
-      diagPrelim: "",
-      diagDiff: "",
-      notes: "",
-    },
-    treatment: {
-      treatmentNotes: "",
-    }
-  });
   const [uploadingImages, setUploadingImages] = useState({});
+  const [clinicalTests, setClinicalTests] = useState([]);
+  const [paraclinicalTests, setParaclinicalTests] = useState([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const [clinicalResponse, paraclinicalResponse] = await Promise.all([
+        // Fetch categories
+        const [clinicalRes, paraclinicalRes] = await Promise.all([
           axiosInstance.get('/api/v1/admin/clinical-ex-cats?page=0&limit=1000'),
-          axiosInstance.get('/api/v1/admin/paraclinical-test-cats?page=0&limit=1000')
+          axiosInstance.get('/api/v1/admin/paraclinical-test-cats?page=0&limit=1000'),
         ]);
-
-        const clinicalData = clinicalResponse.data.data?.items || [];
-        const paraclinicalData = paraclinicalResponse.data.data?.items || [];
-
-        setClinicalCategories(clinicalData);
-        setParaclinicalCategories(paraclinicalData);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
+        setClinicalCategories(clinicalRes.data.data?.items || []);
+        setParaclinicalCategories(paraclinicalRes.data.data?.items || []);
+        // Fetch test results
+        const detailRes = await axiosInstance.get(`/api/v1/admin/patient-cases/${id}`);
+        const data = detailRes.data.data;
+        setClinicalTests(
+          (data.clinicalExResults || []).map((item) => ({
+            ...item,
+            action: ACTIONS.UPDATE,
+            imageObjects: (item.images || []).map(img => ({ id: img.id, publicUrl: img.url })),
+            imageKeys: (item.images || []).map(img => img.id),
+          }))
+        );
+        setParaclinicalTests(
+          (data.paraclinicalExResults || []).map((item) => ({
+            ...item,
+            action: ACTIONS.UPDATE,
+            imageObjects: (item.images || []).map(img => ({ id: img.id, publicUrl: img.url })),
+            imageKeys: (item.images || []).map(img => img.id),
+          }))
+        );
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
       }
     };
-
-    fetchCategories();
-  }, []);
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleNestedInputChange = (parent, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [field]: value
-      }
-    }));
-  };
-
-  const removeArrayItem = (arrayName, index) => {
-    setFormData(prev => ({
-      ...prev,
-      [arrayName]: prev[arrayName].filter((_, i) => i !== index)
-    }));
-  };
+    fetchData();
+  }, [id]);
 
   const handleImageUpload = async (files, arrayName, index) => {
-    setUploadingImages(prev => ({ ...prev, [`${arrayName}-${index}`]: true }));
+    setUploadingImages((prev) => ({ ...prev, [`${arrayName}-${index}`]: true }));
     try {
       const formDataUpload = new FormData();
-      Array.from(files).forEach(file => {
+      Array.from(files).forEach((file) => {
         formDataUpload.append('files', file);
       });
-
       const response = await axiosInstance.post('/api/v1/admin/uploads/images', formDataUpload, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       if (response.data.data) {
-        const newImages = response.data.data.map(img => ({
-          id: img.id,
-          publicUrl: img.publicUrl
-        }));
-        setFormData(prev => ({
-          ...prev,
-          [arrayName]: prev[arrayName].map((item, i) => {
-            if (i !== index) return item;
-            return {
-              ...item,
-              imageObjects: [...newImages, ...(item.imageObjects || [])],
-              imageKeys: [...newImages.map(img => img.id), ...(item.imageKeys || [])]
-            };
-          })
-        }));
+        const newImages = response.data.data.map((img) => ({ id: img.id, publicUrl: img.publicUrl }));
+        if (arrayName === 'clinicalTests') {
+          setClinicalTests((prev) =>
+            prev.map((item, i) =>
+              i === index
+                ? {
+                  ...item,
+                  imageObjects: [...newImages, ...(item.imageObjects || [])],
+                  imageKeys: [...newImages.map((img) => img.id), ...(item.imageKeys || [])],
+                }
+                : item
+            )
+          );
+        } else {
+          setParaclinicalTests((prev) =>
+            prev.map((item, i) =>
+              i === index
+                ? {
+                  ...item,
+                  imageObjects: [...newImages, ...(item.imageObjects || [])],
+                  imageKeys: [...newImages.map((img) => img.id), ...(item.imageKeys || [])],
+                }
+                : item
+            )
+          );
+        }
       }
-    } catch (error) {
-      console.error('Error uploading images:', error);
+    } catch (err) {
+      console.error('Error uploading images:', err);
     } finally {
-      setUploadingImages(prev => ({ ...prev, [`${arrayName}-${index}`]: false }));
+      setUploadingImages((prev) => ({ ...prev, [`${arrayName}-${index}`]: false }));
+    }
+  };
+
+  const handleRemoveImage = (arrayName, index, imageIdToRemove) => {
+    if (arrayName === 'clinicalTests') {
+      setClinicalTests((prev) =>
+        prev.map((item, i) =>
+          i === index
+            ? {
+              ...item,
+              imageObjects: (item.imageObjects || []).filter((img) => img.id !== imageIdToRemove),
+              imageKeys: (item.imageKeys || []).filter((id) => id !== imageIdToRemove),
+            }
+            : item
+        )
+      );
+    } else {
+      setParaclinicalTests((prev) =>
+        prev.map((item, i) =>
+          i === index
+            ? {
+              ...item,
+              imageObjects: (item.imageObjects || []).filter((img) => img.id !== imageIdToRemove),
+              imageKeys: (item.imageKeys || []).filter((id) => id !== imageIdToRemove),
+            }
+            : item
+        )
+      );
+    }
+  };
+
+  const handleArrayInputChange = (arrayName, index, field, value) => {
+    console.log(value);
+    if (arrayName === 'clinicalTests') {
+      setClinicalTests((prev) =>
+        prev.map((item, i) => (i === index ? { ...item, [field]: value, action: item.id ? ACTIONS.UPDATE : ACTIONS.CREATE } : item))
+      );
+    } else {
+      setParaclinicalTests((prev) =>
+        prev.map((item, i) => (i === index ? { ...item, [field]: value, action: item.id ? ACTIONS.UPDATE : ACTIONS.CREATE } : item))
+      );
     }
   };
 
   const addArrayItem = (arrayName) => {
     const newItem = {
-      testCategoryId: "",
-      notes: "",
+      testCategoryId: '',
+      notes: '',
       imageKeys: [],
       imageObjects: [],
-      textResult: ""
+      textResult: '',
+      action: ACTIONS.CREATE,
     };
-
-    setFormData(prev => ({
-      ...prev,
-      [arrayName]: [...prev[arrayName], newItem]
-    }));
+    if (arrayName === 'clinicalTests') {
+      setClinicalTests((prev) => [...prev, newItem]);
+    } else {
+      setParaclinicalTests((prev) => [...prev, newItem]);
+    }
   };
 
-  const handleRemoveImage = (arrayName, index, imageIdToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      [arrayName]: prev[arrayName].map((item, i) => {
-        if (i !== index) return item;
-        return {
-          ...item,
-          imageObjects: (item.imageObjects || []).filter(img => img.id !== imageIdToRemove),
-          imageKeys: (item.imageKeys || []).filter(id => id !== imageIdToRemove)
-        };
-      })
-    }));
-  };
-
-  const handleArrayInputChange = (arrayName, index, field, value) => {
-    console.log(value);
-    setFormData(prev => ({
-      ...prev,
-      [arrayName]: prev[arrayName].map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
-    }));
-    console.log(formData);
+  const removeArrayItem = (arrayName, index) => {
+    if (arrayName === 'clinicalTests') {
+      setClinicalTests((prev) => {
+        const item = prev[index];
+        if (item.id) {
+          return prev.map((it, i) => (i === index ? { ...it, action: ACTIONS.REMOVE } : it));
+        } else {
+          return prev.filter((_, i) => i !== index);
+        }
+      });
+    } else {
+      setParaclinicalTests((prev) => {
+        const item = prev[index];
+        if (item.id) {
+          return prev.map((it, i) => (i === index ? { ...it, action: ACTIONS.REMOVE } : it));
+        } else {
+          return prev.filter((_, i) => i !== index);
+        }
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      await axiosInstance.post('/api/v1/admin/patient-cases', formData);
-      navigate('/dashboard/patient-case');
-    } catch (error) {
-      console.error('Error creating patient case:', error);
+      const clinicalPayload = clinicalTests.filter((t) => t.action !== ACTIONS.REMOVE || t.id).map((t) => {
+        const { id, testCategoryId, textResult, notes, imageKeys, action } = t;
+        const payload = { action, testCategoryId, textResult, notes, imageKeys };
+        if (id) payload.id = id;
+        return payload;
+      });
+      const paraclinicalPayload = paraclinicalTests.filter((t) => t.action !== ACTIONS.REMOVE || t.id).map((t) => {
+        const { id, testCategoryId, textResult, notes, imageKeys, action } = t;
+        const payload = { action, testCategoryId, textResult, notes, imageKeys };
+        if (id) payload.id = id;
+        return payload;
+      });
+      await axiosInstance.put(`/api/v1/admin/patient-cases/${id}/test-results`, {
+        clinicalTests: clinicalPayload,
+        paraclinicalTests: paraclinicalPayload,
+      });
+      navigate(`/dashboard/patient-case/edit/${id}`);
+    } catch (err) {
+      console.error('Error updating test results:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <Card>
-        <CardHeader variant="gradient" color="green" className="mb-8 p-6">
+        <CardHeader variant="gradient" color="blue" className="mb-8 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <Typography variant="h6" color="white">
-            Thêm ca bệnh mới
+            Cập nhật kết quả khám lâm sàng & cận lâm sàng
           </Typography>
+          <Button color="white" className="flex items-center gap-2 text-blue-700"
+            onClick={() => navigate(`/dashboard/patient-case/edit/${id}`)}
+          >
+            Quay lại
+          </Button>
         </CardHeader>
         <CardBody>
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <Typography variant="h6" className="mb-2">Thông tin bệnh nhân mô phỏng</Typography>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Tên ca bệnh"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                required
-              />
-              <Select
-                label="Độ khó"
-                value={formData.mode}
-                onChange={(value) => handleInputChange('mode', value)}
-                required>
-                <Option value="EASY">Dễ</Option>
-                <Option value="NORMAL">Trung bình</Option>
-                <Option value="HARD">Khó</Option>
-              </Select>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Select
-                  label="Giới tính"
-                  value={formData.gender}
-                  onChange={(value) => handleInputChange('gender', value)}
-                  required
-                >
-                  <Option value="MALE">Nam</Option>
-                  <Option value="FEMALE">Nữ</Option>
-                </Select>
-              </div>
-              <div>
-                <Input
-                  type="number"
-                  label="Tuổi"
-                  value={formData.age}
-                  onChange={(e) => handleInputChange('age', e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Input
-                  type="text"
-                  label="Nghề nghiệp"
-                  value={formData.occupation}
-                  onChange={(e) => handleInputChange('occupation', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <Input
-              label="Lý do đến khám"
-              value={formData.reasonForVisit}
-              onChange={(e) => handleInputChange('reasonForVisit', e.target.value)}
-              required
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Textarea
-                label="Tiền sử bệnh"
-                value={formData.medicalHistory}
-                onChange={(e) => handleInputChange('medicalHistory', e.target.value)}
-                required
-              />
-
-              <Textarea
-                label="Tiền sử nha khoa"
-                value={formData.dentalHistory}
-                onChange={(e) => handleInputChange('dentalHistory', e.target.value)}
-                required
-              />
-            </div>
-
-            <Input
-              label="Bệnh sử"
-              value={formData.instruction}
-              onChange={(e) => handleInputChange('clinicalHistory', e.target.value)}
-              required
-            />
-
-            <div>
-              <CreatableSelect
-                isMulti
-                value={formData.suggestedTests.map(val => ({ value: val, label: val }))}
-                onChange={(selected) => {
-                  handleInputChange('suggestedTests', selected ? selected.map(opt => opt.value) : []);
-                }}
-                placeholder="Xét nghiệm đề xuất (nhập và nhấn Enter để thêm)"
-              />
-            </div>
-
             <div>
               <Typography variant="h6" className="mb-2">Khám lâm sàng</Typography>
-              {formData.clinicalExams.map((exam, index) => (
+              {clinicalTests.filter((t) => t.action !== ACTIONS.REMOVE).map((exam, index) => (
                 <div key={index} className="border p-4 rounded-lg mb-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="mb-4">
                       <Select
                         label="Danh mục xét nghiệm"
-                        onChange={(value) =>
-                          handleArrayInputChange("clinicalExams", index, "testCategoryId", parseInt(value))
-                        }
+                        value={exam.clinicalCateId?.toString()}
+                        onChange={(value) => handleArrayInputChange('clinicalTests', index, 'testCategoryId', value)}
                         required
                       >
                         {clinicalCategories.map((category) => (
-                          <Option key={category.id.toString()} value={category.id.toString()}>
+                          <Option key={category.name.toString()} value={category.id.toString()}>
                             {category.name}
                           </Option>
+
                         ))}
                       </Select>
                     </div>
                     <div className="mb-4">
                       <Input
                         label="Kết quả"
-                        value={exam.textResult}
-                        onChange={(e) => handleArrayInputChange('clinicalExams', index, 'textResult', e.target.value)}
+                        value={exam.textResult || ''}
+                        onChange={(e) => handleArrayInputChange('clinicalTests', index, 'textResult', e.target.value)}
                       />
                     </div>
                   </div>
                   <Textarea
                     label="Ghi chú"
-                    value={exam.notes}
-                    onChange={(e) => handleArrayInputChange('clinicalExams', index, 'notes', e.target.value)}
+                    value={exam.notes || ''}
+                    onChange={(e) => handleArrayInputChange('clinicalTests', index, 'notes', e.target.value)}
                   />
                   <div className="mt-2">
                     <div className="flex items-center w-full gap-2">
@@ -345,7 +296,7 @@ export function AddPatientCase() {
                             onClick={(e) => {
                               e.preventDefault();
                               if (window.confirm("Bạn có chắc muốn xóa mục này?")) {
-                                handleRemoveImage('clinicalExams', index, img.id);
+                                handleRemoveImage('clinicalTests', index, img.id);
                               }
                             }}
                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow"
@@ -356,7 +307,7 @@ export function AddPatientCase() {
                       ))}
                       {exam.imageKeys && exam.imageKeys.length < 5 && (
                         <label className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 flex-shrink-0 relative">
-                          {uploadingImages[`clinicalExams-${index}`] ? (
+                          {uploadingImages[`clinicalTests-${index}`] ? (
                             <Spinner className="w-8 h-8 text-gray-400" />
                           ) : (
                             <PhotoIcon className="w-8 h-8 text-gray-400" />
@@ -366,10 +317,10 @@ export function AddPatientCase() {
                             className="hidden"
                             accept="image/*"
                             multiple
-                            disabled={uploadingImages[`clinicalExams-${index}`]}
+                            disabled={uploadingImages[`clinicalTests-${index}`]}
                             onChange={(e) => {
                               const files = Array.from(e.target.files).slice(0, 5 - (exam.imageKeys?.length || 0));
-                              handleImageUpload(files, 'clinicalExams', index);
+                              handleImageUpload(files, 'clinicalTests', index);
                             }}
                           />
                         </label>
@@ -382,7 +333,7 @@ export function AddPatientCase() {
                     color="red"
                     onClick={() => {
                       if (window.confirm("Bạn có chắc muốn xóa mục này?")) {
-                        removeArrayItem('clinicalExams', index);
+                        removeArrayItem('clinicalTests', index);
                       }
                     }}
                     className="mt-2"
@@ -394,7 +345,7 @@ export function AddPatientCase() {
               <Button
                 variant="text"
                 color="blue"
-                onClick={() => addArrayItem('clinicalExams')}
+                onClick={() => addArrayItem('clinicalTests')}
                 className="mt-2"
               >
                 <span className="flex items-center gap-2">
@@ -403,20 +354,20 @@ export function AddPatientCase() {
                 </span>
               </Button>
             </div>
-
             <div>
               <Typography variant="h6" className="mb-2">Xét nghiệm cận lâm sàng</Typography>
-              {formData.paraclinicalTests.map((test, index) => (
+              {paraclinicalTests.filter((t) => t.action !== ACTIONS.REMOVE).map((test, index) => (
                 <div key={index} className="border p-4 rounded-lg mb-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="mb-4">
                       <Select
                         label="Danh mục xét nghiệm"
+                        value={test.paraclinicalId?.toString()}
                         onChange={(value) => handleArrayInputChange('paraclinicalTests', index, 'testCategoryId', value)}
                         required
                       >
                         {paraclinicalCategories.map((category) => (
-                          <Option key={category.id} value={category.id.toString()}>
+                          <Option key={category.id.toString()} value={category.id.toString()}>
                             {category.name}
                           </Option>
                         ))}
@@ -425,15 +376,14 @@ export function AddPatientCase() {
                     <div className="mb-4">
                       <Input
                         label="Kết quả"
-                        value={test.textResult}
+                        value={test.textResult || ''}
                         onChange={(e) => handleArrayInputChange('paraclinicalTests', index, 'textResult', e.target.value)}
                       />
                     </div>
                   </div>
-
                   <Textarea
                     label="Ghi chú"
-                    value={test.notes}
+                    value={test.notes || ''}
                     onChange={(e) => handleArrayInputChange('paraclinicalTests', index, 'notes', e.target.value)}
                   />
                   <div className="mt-2">
@@ -512,62 +462,11 @@ export function AddPatientCase() {
                 </span>
               </Button>
             </div>
-
-            <div className="border p-4 rounded-lg">
-              <Typography variant="h6" className="mb-4">Chẩn đoán</Typography>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <Input
-                  label="Chẩn đoán sơ bộ"
-                  value={formData.diagnosis.diagPrelim}
-                  onChange={(e) => handleNestedInputChange('diagnosis', 'diagPrelim', e.target.value)}
-                  required
-                />
-                <Input
-                  label="Chẩn đoán phân biệt"
-                  value={formData.diagnosis.diagDiff}
-                  onChange={(e) => handleNestedInputChange('diagnosis', 'diagDiff', e.target.value)}
-                  required
-                />
-              </div>
-
-              <Textarea
-                label="Mô tả"
-                value={formData.diagnosis.notes}
-                onChange={(e) => handleNestedInputChange('diagnosis', 'notes', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="border p-4 rounded-lg">
-              <Typography variant="h6" className="mb-4">Điều trị</Typography>
-              <div className="flex flex-col gap-4">
-                <Textarea
-                  label="Mô tả"
-                  value={formData.treatment.treatmentNotes}
-                  onChange={(e) => handleNestedInputChange('treatment', 'treatmentNotes', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="border p-4 rounded-lg">
-              <Typography variant="h6" className="mb-4">Hướng dẫn cho model AI</Typography>
-              <div className="flex flex-col gap-4">
-                <Textarea
-                  label="Hướng dẫn"
-                  value={formData.instruction}
-                  onChange={(e) => handleInputChange('instruction', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-
             <div className="flex justify-end gap-4">
               <Button
                 variant="outlined"
                 color="red"
-                onClick={() => navigate('/dashboard/patient-case')}
+                onClick={() => navigate(`/dashboard/patient-case/edit/${id}`)}
               >
                 Hủy
               </Button>
@@ -576,7 +475,7 @@ export function AddPatientCase() {
                 color="green"
                 disabled={loading}
               >
-                {loading ? 'Đang lưu...' : 'Lưu'}
+                {loading ? 'Đang lưu...' : 'Cập nhật'}
               </Button>
             </div>
           </form>
@@ -584,6 +483,6 @@ export function AddPatientCase() {
       </Card>
     </div>
   );
-}
+};
 
-export default AddPatientCase; 
+export default UpdateTestResults; 
