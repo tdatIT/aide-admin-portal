@@ -5,7 +5,7 @@ import {
   UserPlusIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/solid";
-import appRoutes from "@/Routes";
+import appRoutes from "@/routes";
 
 export function Auth() {
   const navbarRoutes = [
