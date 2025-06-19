@@ -198,7 +198,7 @@ export function AddPatientCase() {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <Card>
-        <CardHeader variant="gradient" color="light-green" className="mb-8 p-6">
+        <CardHeader variant="gradient" color="green" className="mb-8 p-6">
           <Typography variant="h6" color="white">
             Thêm ca bệnh mới
           </Typography>
@@ -524,7 +524,7 @@ export function AddPatientCase() {
               </Button>
               <Button
                 type="submit"
-                color="light-green"
+                color="green"
                 disabled={loading}
               >
                 {loading ? 'Đang lưu...' : 'Lưu'}

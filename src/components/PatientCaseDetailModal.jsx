@@ -103,19 +103,19 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                 <div className="space-y-3">
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Tên ca bệnh:</Typography>
-                    <Typography className="flex-1">{patientCase.name}</Typography>
+                    <Typography className="flex-1">{patientCase.name || "Không có"}</Typography>
                   </div>
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Giới tính:</Typography>
-                    <Typography className="flex-1">{patientCase.gender === "MALE" ? "Nam" : "Nữ"}</Typography>
+                    <Typography className="flex-1">{patientCase.gender === "MALE" ? "Nam" : patientCase.gender === "FEMALE" ? "Nữ" : "Không có"}</Typography>
                   </div>
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Tuổi:</Typography>
-                    <Typography className="flex-1">{patientCase.age}</Typography>
+                    <Typography className="flex-1">{patientCase.age || "Không có"}</Typography>
                   </div>
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Nghề nghiệp:</Typography>
-                    <Typography className="flex-1">{patientCase.occupation}</Typography>
+                    <Typography className="flex-1">{patientCase.occupation || "Không có"}</Typography>
                   </div>
                   <div className="flex items-start">
                     <Typography variant="small" color="blue-gray" className="font-bold w-32">Trạng thái:</Typography>
@@ -179,7 +179,7 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                         <div className="space-y-2">
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Danh mục:</Typography>
-                            <Typography variant="small" className="flex-1">{exam.name}</Typography>
+                            <Typography variant="small" className="flex-1">{exam.name || "Không có"}</Typography>
                           </div>
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>
@@ -219,7 +219,7 @@ export default function PatientCaseDetailModal({ open, handleOpen, patientCase }
                          <div className="space-y-2">
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Danh mục:</Typography>
-                            <Typography variant="small" className="flex-1">{test.name}</Typography>
+                            <Typography variant="small" className="flex-1">{test.name || "Không có"}</Typography>
                           </div>
                           <div className="flex items-start">
                             <Typography variant="small" color="blue-gray" className="font-bold w-20">Ghi chú:</Typography>

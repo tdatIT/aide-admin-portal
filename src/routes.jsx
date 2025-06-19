@@ -4,6 +4,7 @@ import {
   ClipboardDocumentIcon,
   BeakerIcon,
   UsersIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/solid";
 import PatientCaseList from "@/pages/dashboard/PatientCaseList";
 import { SignIn, SignUp } from "@/pages/auth";
@@ -11,6 +12,7 @@ import { ClinicalCategories } from "@/pages/dashboard/ClinicalCategories";
 import { AddPatientCase } from "@/pages/dashboard/AddPatientCase";
 import UsersPage from "./pages/dashboard/UsersPage";
 import UpdatePatientCase from "./pages/dashboard/UpdatePatientCase";
+import Dashboard from "./pages/dashboard/Dashboard";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -21,6 +23,12 @@ export const sidebarRoutes = [
   {
     layout: "dashboard",
     pages: [
+      {
+        icon: <ChartBarIcon {...icon} />,
+        name: "Dashboard",
+        path: "/",
+        element: <Dashboard />,
+      },
       {
         icon: <ClipboardDocumentIcon {...icon} />,
         name: "Danh sách bệnh nhân",
@@ -67,6 +75,11 @@ export const dashboardRoutes = [
   {
     layout: "dashboard",
     pages: [
+      {
+        name: "Dashboard",
+        path: "/dashboard",
+        element: <Dashboard />,
+      },
       {
         name: "Thêm ca bệnh",
         path: "/patient-case/add",

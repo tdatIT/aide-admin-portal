@@ -15,12 +15,10 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@material-tailwind/react";
 import { MaterialTailwindControllerProvider } from "@/context";
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import "../public/css/tailwind.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <BrowserRouter>
         <ThemeProvider>
           <MaterialTailwindControllerProvider>
@@ -28,6 +26,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           </MaterialTailwindControllerProvider>
         </ThemeProvider>
       </BrowserRouter>
-    </GoogleOAuthProvider>
   </React.StrictMode>
 );

@@ -8,7 +8,7 @@ import {
   Footer,
 } from "@/widgets/layout";
 import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
-import { sidebarRoutes, dashboardRoutes } from "@/routes";
+import { sidebarRoutes, dashboardRoutes } from "@/Routes";
 
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
@@ -42,7 +42,11 @@ export function Dashboard() {
             ({ layout, pages }) =>
               layout === "dashboard" &&
               pages.map(({ path, element }) => (
-                <Route key={path} path={path} element={element} />
+                <Route 
+                  key={path} 
+                  path={path === "/" ? "" : path === "/dashboard" ? "" : path} 
+                  element={element} 
+                />
               ))
           )}
         </Routes>

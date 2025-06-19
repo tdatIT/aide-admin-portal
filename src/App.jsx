@@ -8,7 +8,12 @@ function App() {
     <Routes>
       <Route path="/" element={
         <PrivateRoute>
-          <Navigate to="/dashboard/patient-case" replace />
+          <Dashboard />
+        </PrivateRoute>
+      } />
+      <Route path="/dashboard" element={
+        <PrivateRoute>
+          <Dashboard />
         </PrivateRoute>
       } />
       <Route path="/dashboard/*" element={
@@ -20,7 +25,7 @@ function App() {
       <Route path="/auth/error-403" element={<Error403 />} />
       <Route path="*" element={
         <PrivateRoute>
-          <Navigate to="/dashboard/patient-case" replace />
+          <Navigate to="/" replace />
         </PrivateRoute>
       } />
     </Routes>

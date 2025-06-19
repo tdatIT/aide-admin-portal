@@ -31,8 +31,15 @@ export function DashboardNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
-  const [layout, page] = pathname.split("/").filter((el) => el !== "");
+  const pathSegments = pathname.split("/").filter((el) => el !== "");
+  const [layout, page] = pathSegments;
   const { isAuthenticated, userProfile, handleLogout } = useAuth();
+
+  // Xử lý breadcrumbs cho root path
+  const isRootPath = pathname === "/";
+  const isDashboardPath = pathname === "/dashboard";
+  const currentLayout = (isRootPath || isDashboardPath) ? "dashboard" : layout;
+  const currentPage = (isRootPath || isDashboardPath) ? "Home" : page;
 
   return (
     <Navbar
@@ -50,13 +57,13 @@ export function DashboardNavbar() {
             className={`bg-transparent p-0 transition-all ${fixedNavbar ? "mt-1" : ""
               }`}
           >
-            <Link to={`/${layout}`}>
+            <Link to={isRootPath ? "/" : `/${currentLayout}`}>
               <Typography
                 variant="small"
                 color="blue-gray"
                 className="font-normal opacity-50 transition-all hover:text-blue-500 hover:opacity-100"
               >
-                {layout}
+                {currentLayout || 'Dashboard'}
               </Typography>
             </Link>
             <Typography
@@ -64,11 +71,11 @@ export function DashboardNavbar() {
               color="blue-gray"
               className="font-normal"
             >
-              {page}
+              {currentPage || 'Home'}
             </Typography>
           </Breadcrumbs>
           <Typography variant="h6" color="blue-gray">
-            {page}
+            {currentPage || 'Home'}
           </Typography>
         </div>
         <div className="flex items-center">

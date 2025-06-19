@@ -5,22 +5,6 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
 
 export function Error403() {
   const navigate = useNavigate();
-  const [countdown, setCountdown] = useState(8);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate("/auth/sign-in");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [navigate]);
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
@@ -37,9 +21,6 @@ export function Error403() {
           </Typography>
           <Typography variant="paragraph" color="blue-gray" className="mb-8">
             Vui lòng đăng nhập bằng tài khoản khác có quyền truy cập
-          </Typography>
-          <Typography variant="small" color="blue-gray" className="mb-4">
-            Tự động chuyển hướng sau {countdown} giây
           </Typography>
           <Button
             variant="gradient"

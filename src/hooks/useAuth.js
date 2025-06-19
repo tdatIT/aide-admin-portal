@@ -25,7 +25,6 @@ export const useAuth = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('tokenType');
-    localStorage.removeItem('tokenExpiresIn');
     setUserProfile(null);
     setIsAuthenticated(false);
     navigate('/auth/sign-in');

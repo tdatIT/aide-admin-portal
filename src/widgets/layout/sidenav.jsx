@@ -62,29 +62,44 @@ export function Sidenav({ brandImg, brandName, routes }) {
             )}
             {pages.map(({ icon, name, path }) => (
               <li key={name}>
-                <NavLink to={`/${layout}${path}`}>
-                  {({ isActive }) => (
-                    <Button
-                      variant={isActive ? "gradient" : "text"}
-                      color={
-                        isActive
-                          ? "blue"
-                          : sidenavType === "dark"
-                          ? "white"
-                          : "blue-gray"
-                      }
-                      className="flex items-center gap-4 px-4 capitalize"
-                      fullWidth
-                    >
-                      {icon}
-                      <Typography
-                        color="inherit"
-                        className="font-medium capitalize"
+                <NavLink 
+                  to={path === "/" ? "/" : `/${layout}${path}`}
+                  className={({ isActive }) => {
+                    // Xử lý active state cho root path và dashboard path
+                    const isRootPath = path === "/";
+                    const isActiveRoot = isRootPath && (isActive || window.location.pathname === "/" || window.location.pathname === "/dashboard");
+                    
+                    return isActiveRoot ? "active" : "";
+                  }}
+                >
+                  {({ isActive }) => {
+                    // Xử lý active state cho root path và dashboard path
+                    const isRootPath = path === "/";
+                    const isActiveRoot = isRootPath && (isActive || window.location.pathname === "/" || window.location.pathname === "/dashboard");
+                    
+                    return (
+                      <Button
+                        variant={isActiveRoot ? "gradient" : "text"}
+                        color={
+                          isActiveRoot
+                            ? "blue"
+                            : sidenavType === "dark"
+                            ? "white"
+                            : "blue-gray"
+                        }
+                        className="flex items-center gap-4 px-4 capitalize"
+                        fullWidth
                       >
-                        {name}
-                      </Typography>
-                    </Button>
-                  )}
+                        {icon}
+                        <Typography
+                          color="inherit"
+                          className="font-medium capitalize"
+                        >
+                          {name}
+                        </Typography>
+                      </Button>
+                    );
+                  }}
                 </NavLink>
               </li>
             ))}
