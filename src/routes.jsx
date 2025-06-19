@@ -6,13 +6,30 @@ import {
   UsersIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/solid";
-import PatientCaseList from "@/pages/dashboard/PatientCaseList";
+import { lazy, Suspense } from "react";
 import { SignIn, SignUp } from "@/pages/auth";
-import { ClinicalCategories } from "@/pages/dashboard/ClinicalCategories";
-import { AddPatientCase } from "@/pages/dashboard/AddPatientCase";
-import UsersPage from "./pages/dashboard/UsersPage";
-import UpdatePatientCase from "./pages/dashboard/UpdatePatientCase";
-import Dashboard from "./pages/dashboard/Dashboard";
+
+// Lazy load components for code splitting
+const PatientCaseList = lazy(() => import("@/pages/dashboard/PatientCaseList"));
+const ClinicalCategories = lazy(() => import("@/pages/dashboard/ClinicalCategories"));
+const AddPatientCase = lazy(() => import("@/pages/dashboard/AddPatientCase"));
+const UsersPage = lazy(() => import("./pages/dashboard/UsersPage"));
+const UpdatePatientCase = lazy(() => import("./pages/dashboard/UpdatePatientCase"));
+const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+  </div>
+);
+
+// Wrapper component to handle Suspense
+const LazyComponent = ({ component: Component }) => (
+  <Suspense fallback={<LoadingFallback />}>
+    <Component />
+  </Suspense>
+);
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -27,25 +44,25 @@ export const sidebarRoutes = [
         icon: <ChartBarIcon {...icon} />,
         name: "Dashboard",
         path: "/",
-        element: <Dashboard />,
+        element: <LazyComponent component={Dashboard} />,
       },
       {
         icon: <ClipboardDocumentIcon {...icon} />,
         name: "Danh sách bệnh nhân",
         path: "/patient-case",
-        element: <PatientCaseList />,
+        element: <LazyComponent component={PatientCaseList} />,
       },
       {
         icon: <BeakerIcon {...icon} />,
         name: "Danh mục khám/XN",
         path: "/clinical-categories",
-        element: <ClinicalCategories />,
+        element: <LazyComponent component={ClinicalCategories} />,
       },
       {
         icon: <UsersIcon {...icon} />,
         name: "Quản lý người dùng",
         path: "/users",
-        element: <UsersPage />,
+        element: <LazyComponent component={UsersPage} />,
       },
     ],
   },
@@ -78,17 +95,17 @@ export const dashboardRoutes = [
       {
         name: "Dashboard",
         path: "/dashboard",
-        element: <Dashboard />,
+        element: <LazyComponent component={Dashboard} />,
       },
       {
         name: "Thêm ca bệnh",
         path: "/patient-case/add",
-        element: <AddPatientCase />,
+        element: <LazyComponent component={AddPatientCase} />,
       },
       {
         name: "Chỉnh sửa ca bệnh",
         path: "/patient-case/edit/:id",
-        element: <UpdatePatientCase />,
+        element: <LazyComponent component={UpdatePatientCase} />,
       },
     ],
   },
