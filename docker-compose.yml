@@ -1,9 +1,63 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  # Nginx proxy để handle SSL và routing
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: nginx-proxy
     ports:
       - "80:80"
-    env_file:
-      - .env.${ENV:-development} 
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    networks:
+      - proxy
+    restart: unless-stopped
+
+  # Let's Encrypt companion để tự động tạo SSL certificates
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+    environment:
+      - DEFAULT_EMAIL=your-email@example.com  # Thay đổi email của bạn
+    networks:
+      - proxy
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+
+  # Ứng dụng frontend của bạn
+  aide-admin-dashboard:
+    build: .
+    container_name: aide-admin-dashboard
+    environment:
+      - VIRTUAL_HOST=your-domain.com  # Thay đổi domain của bạn
+      - LETSENCRYPT_HOST=your-domain.com  # Thay đổi domain của bạn
+      - LETSENCRYPT_EMAIL=your-email@example.com  # Thay đổi email của bạn
+    networks:
+      - proxy
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+      - letsencrypt
+
+volumes:
+  certs:
+  vhost:
+  html:
+  acme:
+
+networks:
+  proxy:
+    external: true 
